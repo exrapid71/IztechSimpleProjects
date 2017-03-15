@@ -1,0 +1,13 @@
+LIBRARY IEEE;
+    USE IEEE.STD_LOGIC_1164.ALL;
+
+ENTITY FA IS PORT(
+      x0,y0,cin :   IN STD_LOGIC;
+      cout,res  :   OUT STD_LOGIC);
+END FA;
+
+ARCHITECTURE FA_STRUCTURAL OF FA IS
+BEGIN
+    res <= x0 XOR y0 XOR cin;
+    cout <= (x0 AND y0) OR (cin AND (x0 XOR y0));
+END FA_STRUCTURAL;

@@ -1,0 +1,50 @@
+LIBRARY IEEE;
+  USE IEEE.STD_LOGIC_1164.ALL;
+
+ENTITY PCNEXT IS PORT(
+  clk, PCLoad, PCReset, jmpMux : IN STD_LOGIC;
+  dataBus1_0, Ssel : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+  irIn, StackIN  : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+  PCout : OUT STD_LOGIC_VECTOR(7 DOWNTO 0));
+END PCNEXT;
+
+ARCHITECTURE STRUCTURAL_PCNEXT OF PCNEXT IS
+  
+  COMPONENT PROGRAM_COUNTER IS PORT(
+    load : IN STD_LOGIC;
+    reset  : IN STD_LOGIC;
+    clk : IN STD_LOGIC;
+    inputPC : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+    outputPC : OUT STD_LOGIC_VECTOR(7 DOWNTO 0));
+  END COMPONENT;
+  
+  COMPONENT FA_8BIT IS PORT(
+      x0, y0    :   IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+      cin       :   IN STD_LOGIC;
+      f         :   OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+      unsignedOverflow, signedOverflow :   OUT STD_LOGIC);
+  END COMPONENT;
+  
+  COMPONENT MUX IS PORT(
+    sel : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+    x0,x1,x2,x3 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+    y : OUT STD_LOGIC_VECTOR(7 DOWNTO 0));
+  END COMPONENT;
+
+    SIGNAL PCoutADDSUBin, MUXoutADDSUBin, unused, ADDSUBoutMUXin, MUXoutPCin, muxIN : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    SIGNAL sub : STD_LOGIC;
+    SIGNAL e : STD_LOGIC_VECTOR(1 DOWNTO 0);
+
+BEGIN
+  muxIN <= "0000"&dataBus1_0&"11";
+  e   <= '0'&jmpMux;
+  sub <= jmpMux AND irIn(7);
+    
+  U0 : PROGRAM_COUNTER PORT MAP(PCLoad, PCReset, clk, MUXoutPCin, PCOutADDSUBin);
+  U1 : FA_8BIT PORT MAP(PCOutADDSUBin, MUXoutADDSUBin, sub, ADDSUBoutMUXin, unused(0), unused(0));
+  mux2 : MUX PORT MAP(e, "00000001", irIn, unused, unused, MUXoutADDSUBin);
+  mux1 : MUX PORT MAP(Ssel, muxIN, ADDSUBoutMUXin, StackIN, unused, MUXoutPCin);
+    
+  PCout <= PCoutADDSUBin;
+
+END STRUCTURAL_PCNEXT;
